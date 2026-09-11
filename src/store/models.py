@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 # ============================================================
 # Funciones del Laboratorio de la Semana 2 (almacenamiento en
@@ -180,3 +182,136 @@ class Prenda(models.Model):
 
     def __str__(self):
         return self.nombre
+
+
+class DetallePrenda(models.Model):
+    prenda = models.OneToOneField(
+        Prenda,
+        on_delete=models.CASCADE,
+        related_name='detalle',
+        verbose_name="Prenda"
+    )
+    composicion = models.CharField(
+        max_length=200,
+        verbose_name="Composición Textil",
+        help_text="Ej: 100% Algodón Peinado 24/1"
+    )
+    cuidados = models.TextField(
+        verbose_name="Instrucciones de Cuidado",
+        help_text="Ej: Lavar con agua fría, secar a la sombra, no usar lejía"
+    )
+    pais_origen = models.CharField(
+        max_length=60,
+        default="Perú",
+        verbose_name="País de Origen"
+    )
+    guia_medidas = models.TextField(
+        blank=True,
+        verbose_name="Guía de Medidas / Dimensiones",
+        help_text="Ej: Pecho: 56cm | Largo: 74cm | Manga: 22cm"
+    )
+
+    class Meta:
+        verbose_name = "Detalle de Prenda"
+        verbose_name_plural = "Detalles de Prendas"
+
+    def __str__(self):
+        return f"Detalle de {self.prenda.nombre}"
+
+
+class ResenaPrenda(models.Model):
+    prenda = models.ForeignKey(
+        Prenda,
+        on_delete=models.CASCADE,
+        related_name='resenas',
+        verbose_name="Prenda calificada"
+    )
+    cliente_nombre = models.CharField(
+        max_length=100,
+        verbose_name="Nombre del Cliente"
+    )
+    calificacion = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        verbose_name="Calificación (Estrellas)",
+        help_text="Puntuación del 1 al 5"
+    )
+    comentario = models.TextField(
+        verbose_name="Comentario u Opinión"
+    )
+    fecha = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de publicación"
+    )
+
+    class Meta:
+        verbose_name = "Reseña de Prenda"
+        verbose_name_plural = "Reseñas de Prendas"
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.cliente_nombre} - {self.prenda.nombre} ({self.calificacion}★)"
+
+
+ESTADO_PEDIDO_CHOICES = [
+    ('Pendiente', 'Pendiente de Pago'),
+    ('Pagado', 'Pagado / En Preparación'),
+    ('Enviado', 'Enviado en Reparto'),
+    ('Entregado', 'Entregado al Cliente'),
+    ('Cancelado', 'Cancelado'),
+]
+
+
+class Pedido(models.Model):
+    codigo = models.CharField(max_length=20, unique=True, verbose_name="Código de Pedido")
+    cliente_nombre = models.CharField(max_length=100, verbose_name="Nombre del Cliente")
+    cliente_email = models.EmailField(verbose_name="Correo Electrónico")
+    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
+    estado = models.CharField(max_length=20, choices=ESTADO_PEDIDO_CHOICES, default='Pendiente', verbose_name="Estado")
+    prendas = models.ManyToManyField(
+        Prenda,
+        through='DetallePedido',
+        related_name='pedidos',
+        verbose_name="Prendas Incluidas"
+    )
+
+    class Meta:
+        verbose_name = "Pedido"
+        verbose_name_plural = "Pedidos"
+        ordering = ['-fecha_creacion']
+
+    def __str__(self):
+        return f"Pedido {self.codigo} - {self.cliente_nombre} ({self.estado})"
+
+    def total(self):
+        return sum(d.subtotal() for d in self.detalles.all())
+
+
+class DetallePedido(models.Model):
+    pedido = models.ForeignKey(
+        Pedido,
+        on_delete=models.CASCADE,
+        related_name='detalles',
+        verbose_name="Pedido"
+    )
+    prenda = models.ForeignKey(
+        Prenda,
+        on_delete=models.CASCADE,
+        related_name='detalles_pedido',
+        verbose_name="Prenda"
+    )
+    cantidad = models.PositiveIntegerField(default=1, verbose_name="Cantidad")
+    precio_unitario = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Precio Unitario (S/)")
+    fecha_agregado = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Agregado")
+
+    class Meta:
+        verbose_name = "Detalle de Pedido"
+        verbose_name_plural = "Detalles de Pedidos"
+        unique_together = ('pedido', 'prenda')
+
+    def __str__(self):
+        return f"{self.cantidad}x {self.prenda.nombre} en {self.pedido.codigo}"
+
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
+
+

@@ -17,8 +17,12 @@
                 <div class="card-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
                     <span class="badge bg-light text-dark fw-bold">ID #{{ prenda.id }}</span>
                     <div>
+                        {% if prenda.pedidos.exists %}
+                            <span class="badge bg-info text-dark me-1 px-2 py-1"><i class="bi bi-bag-check me-1"></i>En {{ prenda.pedidos.count }} pedido{{ prenda.pedidos.count|pluralize:"s" }}</span>
+                        {% endif %}
                         {% if prenda.activo %}
                             <span class="badge bg-primary text-white me-1 px-2 py-1">Activo</span>
+
                         {% else %}
                             <span class="badge bg-secondary text-white me-1 px-2 py-1">Inactivo</span>
                         {% endif %}
@@ -57,8 +61,133 @@
                     </div>
 
                     <div class="mb-4">
-                        <h6 class="fw-bold text-secondary text-uppercase small">Especificaciones y Material:</h6>
-                        <p class="text-dark">{{ prenda.descripcion|default:"Sin especificaciones adicionales registradas." }}</p>
+                        <h6 class="fw-bold text-secondary text-uppercase small">Descripción General:</h6>
+                        <p class="text-dark">{{ prenda.descripcion|default:"Sin descripción registrada." }}</p>
+                    </div>
+
+                    <!-- Ficha Complementaria (Relación 1 a 1: DetallePrenda) -->
+                    <div class="card border border-primary border-opacity-25 bg-light rounded-3 p-3 mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-card-checklist fs-4 text-primary me-2"></i>
+                            <h5 class="fw-bold mb-0 text-dark">Ficha Complementaria (Detalles Técnicos)</h5>
+                            <span class="badge bg-primary ms-auto">Relación 1:1</span>
+                        </div>
+
+                        {% if prenda.detalle %}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <span class="text-muted small d-block"><i class="bi bi-layers me-1"></i> Composición Textil:</span>
+                                    <strong class="text-dark">{{ prenda.detalle.composicion }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-muted small d-block"><i class="bi bi-geo-alt me-1"></i> País de Origen:</span>
+                                    <strong class="text-dark">{{ prenda.detalle.pais_origen }}</strong>
+                                </div>
+                                <div class="col-12">
+                                    <span class="text-muted small d-block"><i class="bi bi-shield-check me-1"></i> Instrucciones de Cuidado / Lavado:</span>
+                                    <div class="text-dark mt-1 small bg-white p-2 rounded border">{{ prenda.detalle.cuidados }}</div>
+                                </div>
+                                {% if prenda.detalle.guia_medidas %}
+                                <div class="col-12">
+                                    <span class="text-muted small d-block"><i class="bi bi-rulers me-1"></i> Guía de Medidas y Dimensiones:</span>
+                                    <div class="text-dark mt-1 small bg-white p-2 rounded border font-monospace">{{ prenda.detalle.guia_medidas }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-secondary d-flex align-items-center mb-0 py-2" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <div>Esta prenda aún no cuenta con una ficha complementaria registrada.</div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Reseñas y Opiniones de Clientes (Relación 1 a N: ResenaPrenda) -->
+                    <div class="card border border-warning border-opacity-50 bg-white rounded-3 shadow-sm p-4 mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                            <div>
+                                <h5 class="fw-bold mb-1 text-dark d-flex align-items-center">
+                                    <i class="bi bi-star-fill text-warning me-2"></i> Opiniones de Clientes
+                                </h5>
+                                <p class="text-muted small mb-0">
+                                    {% if promedio_calificacion %}
+                                        Promedio: <strong class="text-dark">{{ promedio_calificacion }} / 5.0</strong> ({{ total_resenas }} reseña{{ total_resenas|pluralize:"s" }})
+                                    {% else %}
+                                        Sé el primero en compartir tu experiencia
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-warning text-dark fw-semibold mt-2 mt-sm-0" type="button" data-bs-toggle="collapse" data-bs-target="#formResenaCollapse">
+                                <i class="bi bi-pencil-square me-1"></i> Escribir Opinión
+                            </button>
+                        </div>
+
+                        <!-- Formulario Colapsable para Nueva Reseña -->
+                        <div class="collapse mb-4" id="formResenaCollapse">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-chat-left-quote me-1"></i> Deja tu calificación para esta prenda</h6>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <div class="row g-2">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label small fw-semibold text-secondary">{{ resena_form.cliente_nombre.label }}</label>
+                                            {{ resena_form.cliente_nombre }}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label small fw-semibold text-secondary">{{ resena_form.calificacion.label }}</label>
+                                            {{ resena_form.calificacion }}
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label small fw-semibold text-secondary">{{ resena_form.comentario.label }}</label>
+                                            {{ resena_form.comentario }}
+                                        </div>
+                                        <div class="col-12 text-end">
+                                            <button type="submit" name="submit_resena" class="btn btn-warning text-dark fw-bold px-4">
+                                                <i class="bi bi-send me-1"></i> Publicar Calificación
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Listado de Reseñas -->
+                        <div class="list-group list-group-flush">
+                            {% for r in resenas %}
+                                <div class="list-group-item px-0 py-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 13px; font-weight: bold;">
+                                                {{ r.cliente_nombre|slice:":1"|upper }}
+                                            </div>
+                                            <strong class="text-dark">{{ r.cliente_nombre }}</strong>
+                                        </div>
+                                        <span class="text-muted small">{{ r.fecha|date:"d/m/Y H:i" }}</span>
+                                    </div>
+                                    <div class="mb-2 text-warning fs-6">
+                                        {% if r.calificacion == 5 %}
+                                            ★★★★★
+                                        {% elif r.calificacion == 4 %}
+                                            ★★★★☆
+                                        {% elif r.calificacion == 3 %}
+                                            ★★★☆☆
+                                        {% elif r.calificacion == 2 %}
+                                            ★★☆☆☆
+                                        {% else %}
+                                            ★☆☆☆☆
+                                        {% endif %}
+                                        <span class="text-muted small ms-1">({{ r.calificacion }}/5)</span>
+                                    </div>
+                                    <p class="text-dark mb-0 bg-light p-2 rounded-2 small">{{ r.comentario }}</p>
+                                </div>
+                            {% empty %}
+                                <div class="alert alert-light border text-center py-4 mb-0">
+                                    <i class="bi bi-chat-dots fs-3 text-muted d-block mb-2"></i>
+                                    <h6 class="text-secondary fw-semibold">Esta prenda aún no tiene opiniones registradas.</h6>
+                                    <p class="text-muted small mb-0">¡Haz clic en "Escribir Opinión" para ser el primero en calificarla!</p>
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
 
                     <div class="pt-3 border-top">

@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.db.models import Q
-from .models import Prenda
-from .forms import PrendaForm
+from .models import Prenda, ResenaPrenda
+from .forms import PrendaForm, ResenaPrendaForm
+
 
 
 def prenda_list(request):
@@ -49,10 +50,32 @@ def prenda_detail(request, prenda_id):
     except Prenda.DoesNotExist:
         raise Http404(f"La prenda con ID #{prenda_id} no existe o no está activa.")
 
+    resena_form = ResenaPrendaForm()
+
+    if request.method == 'POST' and 'submit_resena' in request.POST:
+        resena_form = ResenaPrendaForm(request.POST)
+        if resena_form.is_valid():
+            ResenaPrenda.objects.create(
+                prenda=prenda,
+                cliente_nombre=resena_form.cleaned_data['cliente_nombre'],
+                calificacion=int(resena_form.cleaned_data['calificacion']),
+                comentario=resena_form.cleaned_data['comentario'],
+            )
+            return redirect('store:detail', prenda_id=prenda.id)
+
+    resenas = prenda.resenas.all()
+    total_resenas = resenas.count()
+    promedio_calificacion = round(sum(r.calificacion for r in resenas) / total_resenas, 1) if total_resenas > 0 else None
+
     return render(request, 'store/prenda_detail.html', {
         'prenda': prenda,
         'titulo': f"Detalle: {prenda.nombre}",
+        'resenas': resenas,
+        'total_resenas': total_resenas,
+        'promedio_calificacion': promedio_calificacion,
+        'resena_form': resena_form,
     })
+
 
 
 def prenda_create(request):

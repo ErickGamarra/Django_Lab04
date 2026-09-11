@@ -85,3 +85,33 @@ class PrendaForm(forms.Form):
         label="Descripción",
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
     )
+
+
+ESTRELLAS_CHOICES = [
+    (5, '★★★★★ (5 estrellas - Excelente)'),
+    (4, '★★★★☆ (4 estrellas - Muy Bueno)'),
+    (3, '★★★☆☆ (3 estrellas - Bueno)'),
+    (2, '★★☆☆☆ (2 estrellas - Regular)'),
+    (1, '★☆☆☆☆ (1 estrella - Malo)'),
+]
+
+
+class ResenaPrendaForm(forms.Form):
+    cliente_nombre = forms.CharField(
+        max_length=100,
+        required=True,
+        label="Tu Nombre",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Carlos Mendoza'})
+    )
+    calificacion = forms.ChoiceField(
+        choices=ESTRELLAS_CHOICES,
+        required=True,
+        label="Calificación",
+        initial=5,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    comentario = forms.CharField(
+        required=True,
+        label="Tu Opinión sobre la Prenda",
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Cuéntanos qué tal te pareció la tela, corte o talla...'})
+    )
