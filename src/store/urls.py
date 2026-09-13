@@ -7,4 +7,9 @@ urlpatterns = [
     path('', views.prenda_list, name='list'),
     path('nueva/', views.prenda_create, name='create'),
     path('<int:prenda_id>/', views.prenda_detail, name='detail'),
+    
+    # EJERCICIO 6: RUTAS DE CONSULTAS OPTIMIZADAS
+
+    path('details/', views.prenda_detail_list, name='prenda_detail_list'),
+    path('orders/', views.pedido_list, name='pedido_list'),
 ]

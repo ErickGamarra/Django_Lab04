@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} - UrbanTrend{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1 text-dark">{{ titulo }}</h1>
+        <p class="text-muted small mb-0">
+            Demostración de optimización <strong>1:1</strong> mediante <code>select_related('detalle')</code> (JOIN SQL).
+        </p>
+    </div>
+    <div>
+        <span class="badge badge-soft-success border border-success border-opacity-25 px-3 py-2 fs-6 fw-semibold">
+            <i class="bi bi-database-check me-1"></i> Consultas SQL: {{ total_consultas }} (Esperado: 1)
+        </span>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Prenda</th>
+                    <th>Marca</th>
+                    <th>Precio</th>
+                    <th>Composición Textil</th>
+                    <th>Cuidados</th>
+                    <th class="pe-4">Origen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prenda in prendas %}
+                <tr>
+                    <td class="ps-4 text-muted fw-semibold">#{{ prenda.id }}</td>
+                    <td>
+                        <div class="fw-bold text-dark">{{ prenda.nombre }}</div>
+                        <span class="badge badge-soft-secondary text-uppercase">{{ prenda.talla }}</span>
+                        <span class="badge badge-soft-primary">{{ prenda.categoria }}</span>
+                    </td>
+                    <td>{{ prenda.marca }}</td>
+                    <td class="fw-bold text-primary">S/ {{ prenda.precio }}</td>
+                    <td>{{ prenda.detalle.composicion|default:"<span class='text-muted'>Sin ficha</span>"|safe }}</td>
+                    <td class="small text-muted">{{ prenda.detalle.cuidados|default:"Sin especificación" }}</td>
+                    <td class="pe-4">
+                        <span class="badge badge-soft-secondary">
+                            <i class="bi bi-geo-alt me-1"></i>{{ prenda.detalle.pais_origen|default:"No definido" }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        No existen prendas activas registradas en el catálogo.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

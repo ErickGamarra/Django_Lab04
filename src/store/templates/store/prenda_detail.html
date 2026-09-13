@@ -18,11 +18,12 @@
                     <span class="badge bg-light text-dark fw-bold">ID #{{ prenda.id }}</span>
                     <div>
                         {% if prenda.pedidos.exists %}
-                            <span class="badge bg-info text-dark me-1 px-2 py-1"><i class="bi bi-bag-check me-1"></i>En {{ prenda.pedidos.count }} pedido{{ prenda.pedidos.count|pluralize:"s" }}</span>
+                            <span class="badge bg-info text-dark me-1 px-2 py-1">
+                                <i class="bi bi-bag-check me-1"></i>En {{ prenda.pedidos.count }} pedido{{ prenda.pedidos.count|pluralize:"s" }}
+                            </span>
                         {% endif %}
                         {% if prenda.activo %}
                             <span class="badge bg-primary text-white me-1 px-2 py-1">Activo</span>
-
                         {% else %}
                             <span class="badge bg-secondary text-white me-1 px-2 py-1">Inactivo</span>
                         {% endif %}
@@ -33,6 +34,7 @@
                         {% endif %}
                     </div>
                 </div>
+
                 <div class="card-body p-4 bg-white">
                     <h2 class="h3 fw-bold text-dark mb-1">{{ prenda.nombre }}</h2>
                     <p class="text-muted mb-4">Fabricante / Marca: <strong class="text-dark">{{ prenda.marca }}</strong></p>
@@ -65,7 +67,7 @@
                         <p class="text-dark">{{ prenda.descripcion|default:"Sin descripción registrada." }}</p>
                     </div>
 
-                    <!-- Ficha Complementaria (Relación 1 a 1: DetallePrenda) -->
+                    <!-- Ficha Complementaria (Acceso Directo 1:1: DetallePrenda) -->
                     <div class="card border border-primary border-opacity-25 bg-light rounded-3 p-3 mb-4">
                         <div class="d-flex align-items-center mb-3">
                             <i class="bi bi-card-checklist fs-4 text-primary me-2"></i>
@@ -102,7 +104,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- Reseñas y Opiniones de Clientes (Relación 1 a N: ResenaPrenda) -->
+                    <!-- Reseñas y Opiniones de Clientes (Acceso Inverso 1 a N: ResenaPrenda) -->
                     <div class="card border border-warning border-opacity-50 bg-white rounded-3 shadow-sm p-4 mb-4">
                         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
                             <div>
@@ -111,7 +113,7 @@
                                 </h5>
                                 <p class="text-muted small mb-0">
                                     {% if promedio_calificacion %}
-                                        Promedio: <strong class="text-dark">{{ promedio_calificacion }} / 5.0</strong> ({{ total_resenas }} reseña{{ total_resenas|pluralize:"s" }})
+                                        Promedio: <strong class="text-dark">{{ promedio_calificacion }} / 5.0</strong> ({{ prenda.resenas.count }} reseña{{ prenda.resenas.count|pluralize:"s" }})
                                     {% else %}
                                         Sé el primero en compartir tu experiencia
                                     {% endif %}
@@ -151,9 +153,9 @@
                             </div>
                         </div>
 
-                        <!-- Listado de Reseñas -->
+                        <!-- Listado de Reseñas: Acceso Inverso Directo con prenda.resenas.all -->
                         <div class="list-group list-group-flush">
-                            {% for r in resenas %}
+                            {% for r in prenda.resenas.all %}
                                 <div class="list-group-item px-0 py-3">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <div class="d-flex align-items-center">

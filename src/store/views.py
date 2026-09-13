@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.db.models import Q
-from .models import Prenda, ResenaPrenda
+from django.db import connection, reset_queries
+from .models import Prenda, ResenaPrenda, Pedido
 from .forms import PrendaForm, ResenaPrendaForm
-
 
 
 def prenda_list(request):
@@ -77,7 +77,6 @@ def prenda_detail(request, prenda_id):
     })
 
 
-
 def prenda_create(request):
     if request.method == 'POST':
         form = PrendaForm(request.POST)
@@ -101,4 +100,49 @@ def prenda_create(request):
     return render(request, 'store/prenda_form.html', {
         'titulo': 'Registrar Nueva Prenda',
         'form': form,
+    })
+
+
+# EJERCICIO 6: CONSULTAS DE RELACIONES OPTIMIZADAS
+
+
+def prenda_detail_list(request):
+    """
+    1:1 relationship optimized via select_related.
+    Retrieves active garments with their technical sheet (DetallePrenda)
+    in a single SQL query (JOIN).
+    """
+    reset_queries()
+
+    prendas = Prenda.objects.filter(activo=True).select_related('detalle')
+
+    lista_prendas = list(prendas)
+    total_consultas = len(connection.queries)
+
+    return render(request, 'store/prenda_detail_list.html', {
+        'titulo': 'Catálogo con Ficha Técnica (select_related)',
+        'prendas': lista_prendas,
+        # La plantilla espera este nombre para mostrar el contador SQL.
+        'total_consultas': total_consultas,
+    })
+
+
+def pedido_list(request):
+    """
+    N:M intermediate relationship optimized via prefetch_related.
+    Retrieves orders, intermediate order details, and related garments
+    executing separate queries and caching them in memory.
+    """
+    reset_queries()
+
+    pedidos = Pedido.objects.prefetch_related('detalles__prenda')
+
+    lista_pedidos = list(pedidos)
+    total_consultas = len(connection.queries)
+
+    return render(request, 'store/pedido_list.html', {
+        'titulo': 'Listado de Pedidos y Detalles (prefetch_related)',
+        'pedidos': lista_pedidos,
+        # La plantilla espera este nombre para mostrar el contador SQL.
+        'total_consultas': total_consultas,
     })

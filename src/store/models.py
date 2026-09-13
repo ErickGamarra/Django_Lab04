@@ -1,6 +1,10 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+#Implementación de memoria
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 # ============================================================
 # Funciones del Laboratorio de la Semana 2 (almacenamiento en
@@ -314,4 +318,49 @@ class DetallePedido(models.Model):
     def subtotal(self):
         return self.cantidad * self.precio_unitario
 
-
+
+# Crea automaticamente la ficha tecnica 1:1 al registrar una prenda.
+# Debe estar fuera de las clases para registrarse a nivel de modulo.
+@receiver(post_save, sender=Prenda)
+def crear_o_actualizar_detalle_prenda(sender, instance, created, **kwargs):
+    """
+    Cada vez que se crea una nueva Prenda, se genera automáticamente
+    su registro complementario 1:1 en DetallePrenda con valores acordes
+    a su categoría.
+    """
+    if created:
+        especificaciones = {
+            'Polos': {
+                'composicion': '100% Algodón Peinado 24/1',
+                'cuidados': 'Lavar con agua fría, secar a la sombra, planchar a temperatura media',
+            },
+            'Casacas y Poleras': {
+                'composicion': 'Algodón French Terry con poliéster (Fleece pesado)',
+                'cuidados': 'Lavar al revés con agua fría, no usar lejía',
+            },
+            'Jeans': {
+                'composicion': '100% Denim rígido 13 oz',
+                'cuidados': 'Lavar por separado en agua fría, secar tendido',
+            },
+            'Ropa Deportiva': {
+                'composicion': 'Drill Stretch / Poliéster técnico',
+                'cuidados': 'Lavado suave, secado rápido, no planchar estampados',
+            },
+            'Vestidos': {
+                'composicion': '100% Algodón Jersey suave',
+                'cuidados': 'Lavar en ciclo delicado, no estrujar',
+            },
+        }
+
+        config = especificaciones.get(instance.categoria, {
+            'composicion': 'Algodón nacional seleccionado',
+            'cuidados': 'Lavar con agua fría y colores similares',
+        })
+
+        DetallePrenda.objects.create(
+            prenda=instance,
+            composicion=config['composicion'],
+            cuidados=config['cuidados'],
+            pais_origen='Perú',
+            guia_medidas=f'Talla estándar {instance.talla}'
+        )
