@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}UrbanTrend — {{ titulo }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="{% url 'logistics:index' %}" class="text-decoration-none">Logística</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logistics:material_list' %}" class="text-decoration-none">Materiales</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logistics:material_detail' ficha.material.pk %}" class="text-decoration-none">{{ ficha.material.nombre }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Editar Ficha Técnica</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-medical text-primary fs-5"></i>
+                <div>
+                    <h5 class="card-title fw-bold mb-0">{{ titulo }}</h5>
+                    <small class="text-muted">Parámetros textiles especializados (Relación 1:1)</small>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Material Textil Asociado (1:1)</label>
+                        {{ form.material }}
+                        {% if form.material.errors %}
+                            <div class="text-danger small mt-1">{{ form.material.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Composición Textil</label>
+                            {{ form.composicion }}
+                            <small class="text-muted">Ej. 100% Algodón Pima Peruano, 95% Algodón 5% Spandex</small>
+                            {% if form.composicion.errors %}
+                                <div class="text-danger small mt-1">{{ form.composicion.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Densidad / Gramaje</label>
+                            {{ form.densidad_gramaje }}
+                            <small class="text-muted">Ej. 220 gr/m², 180 gr/m²</small>
+                            {% if form.densidad_gramaje.errors %}
+                                <div class="text-danger small mt-1">{{ form.densidad_gramaje.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Tolerancia de Encogimiento</label>
+                            {{ form.tolerancia_encogimiento }}
+                            <small class="text-muted">Ej. +/- 3%, Máximo 2%</small>
+                            {% if form.tolerancia_encogimiento.errors %}
+                                <div class="text-danger small mt-1">{{ form.tolerancia_encogimiento.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Temperatura de Lavado</label>
+                            {{ form.temperatura_lavado }}
+                            <small class="text-muted">Ej. Máximo 30°C / Lavar con agua fría</small>
+                            {% if form.temperatura_lavado.errors %}
+                                <div class="text-danger small mt-1">{{ form.temperatura_lavado.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Cuidados y Recomendaciones Adicionales</label>
+                        {{ form.cuidados_adicionales }}
+                        {% if form.cuidados_adicionales.errors %}
+                            <div class="text-danger small mt-1">{{ form.cuidados_adicionales.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a href="{% url 'logistics:material_detail' ficha.material.pk %}" class="btn btn-outline-secondary rounded-pill px-4">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-save me-1"></i> Guardar Ficha Técnica
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

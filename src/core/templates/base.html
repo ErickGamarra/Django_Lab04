@@ -64,7 +64,7 @@
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'store:list' %}">
                 <i class="bi bi-shop text-primary fs-4"></i>
-                <span>UrbanTrend <span class="badge bg-primary text-uppercase fs-6">Lab 03</span></span>
+                <span>UrbanTrend <span class="badge bg-primary text-uppercase fs-6">Lab 04</span></span>
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
@@ -78,14 +78,25 @@
                             <i class="bi bi-grid-fill me-1"></i> Catálogo
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-medium px-3 text-info" href="{% url 'logistics:index' %}">
-                            <i class="bi bi-box-seam-fill me-1"></i> Logística & Insumos
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-medium px-3 text-info" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam-fill me-1"></i> Logística & Almacén
                         </a>
+                        <ul class="dropdown-menu shadow border-0">
+                            <li><a class="dropdown-item" href="{% url 'logistics:index' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard Logística</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logistics:material_list' %}"><i class="bi bi-boxes me-2"></i>Materiales Textiles (1:N y 1:1)</a></li>
+                            <li><a class="dropdown-item" href="{% url 'logistics:categoria_list' %}"><i class="bi bi-tags me-2"></i>Familias / Categorías (1:N)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item fw-bold text-primary" href="{% url 'logistics:orden_despacho_list' %}"><i class="bi bi-truck me-2"></i>Órdenes de Despacho (N:M)</a></li>
+                            <li><a class="dropdown-item" href="{% url 'logistics:detalle_despacho_list' %}"><i class="bi bi-layers me-2"></i>Detalle Despachos (CRUD Intermedio)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logistics:proveedor_list' %}"><i class="bi bi-building me-2"></i>Proveedores</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="btn btn-primary btn-sm fw-semibold px-3 py-2 rounded-pill shadow-sm" href="{% url 'store:create' %}">
-                            <i class="bi bi-plus-lg me-1"></i> + Nueva Prenda
+                        <a class="btn btn-primary btn-sm fw-semibold px-3 py-2 rounded-pill shadow-sm" href="{% url 'logistics:orden_despacho_create' %}">
+                            <i class="bi bi-truck me-1"></i> + Nuevo Despacho
                         </a>
                     </li>
                 </ul>

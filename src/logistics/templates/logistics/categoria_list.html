@@ -41,6 +41,7 @@
                     <th scope="col" style="width: 250px;">Nombre de la Categoría</th>
                     <th scope="col">Descripción Técnica</th>
                     <th scope="col" class="text-center" style="width: 160px;">Insumos Vinculados</th>
+                    <th scope="col" class="text-end pe-3" style="width: 120px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,8 +57,13 @@
                     </td>
                     <td class="text-center">
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
-                            {{ c.materiales.count }} material{{ c.materiales.count|pluralize:"es" }}
+                            {{ c.materiales.all|length }} material{{ c.materiales.all|length|pluralize:"es" }}
                         </span>
+                    </td>
+                    <td class="text-end pe-3">
+                        <a href="{% url 'logistics:categoria_delete' c.pk %}" class="btn btn-outline-danger btn-sm" title="Probar eliminación protegida (PROTECT)">
+                            <i class="bi bi-trash me-1"></i> Borrar
+                        </a>
                     </td>
                 </tr>
                 {% empty %}

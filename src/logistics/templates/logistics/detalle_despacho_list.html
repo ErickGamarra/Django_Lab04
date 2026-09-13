@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}UrbanTrend — CRUD de Modelo Intermedio (DetalleDespacho){% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="{% url 'logistics:index' %}" class="text-decoration-none">Logística</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logistics:orden_despacho_list' %}" class="text-decoration-none">Despachos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detalles de Despacho (Modelo Intermedio)</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h1 class="h3 fw-bold mb-0 text-slate-800">Modelo Intermedio: <code>DetalleDespacho</code></h1>
+            <span class="badge bg-success rounded-pill">CRUD Criterio 9</span>
+        </div>
+        <p class="text-muted small mb-0 mt-1">Gestión directa del modelo intermedio de la relación N:M entre <strong>OrdenDespacho</strong> y <strong>Material</strong> con sus atributos propios.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'logistics:detalle_despacho_create' %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Añadir Registro Intermedio
+        </a>
+        <a href="{% url 'logistics:orden_despacho_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 bg-white shadow-sm">
+            <i class="bi bi-truck me-1"></i> Ver Órdenes de Despacho
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-table text-primary fs-5"></i>
+            <div>
+                <h5 class="card-title fw-bold mb-0">Listado General del Modelo Intermedio (READ)</h5>
+                <small class="text-muted">Consulta optimizada con <code>select_related('despacho', 'material')</code></small>
+            </div>
+        </div>
+        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3">
+            {{ detalles|length }} registro{{ detalles|length|pluralize }}
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="ps-3" style="width: 70px;"># ID</th>
+                    <th scope="col">Orden de Despacho (FK)</th>
+                    <th scope="col">Material Textil (FK)</th>
+                    <th scope="col">Lote (Atributo Propio)</th>
+                    <th scope="col" class="text-center">Cantidad (Atributo Propio)</th>
+                    <th scope="col" class="text-end">Costo Histórico (Atributo Propio)</th>
+                    <th scope="col" class="text-end">Subtotal Calculado</th>
+                    <th scope="col" class="text-end pe-3" style="width: 140px;">Acciones CRUD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in detalles %}
+                <tr>
+                    <td class="ps-3 text-muted"><code>#{{ d.id }}</code></td>
+                    <td>
+                        <a href="{% url 'logistics:orden_despacho_detail' d.despacho.pk %}" class="fw-bold text-decoration-none">
+                            <code>{{ d.despacho.codigo }}</code>
+                        </a>
+                        <small class="text-muted d-block">{{ d.despacho.sucursal_destino.nombre }}</small>
+                    </td>
+                    <td>
+                        <a href="{% url 'logistics:material_detail' d.material.pk %}" class="fw-semibold text-dark text-decoration-none">
+                            {{ d.material.nombre }}
+                        </a>
+                        <small class="text-muted d-block">{{ d.material.categoria.nombre }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            <code>{{ d.lote_produccion }}</code>
+                        </span>
+                    </td>
+                    <td class="text-center fw-bold">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">
+                            {{ d.cantidad_despachada }} {{ d.material.unidad_medida }}
+                        </span>
+                    </td>
+                    <td class="text-end font-monospace">
+                        S/ {{ d.costo_unitario_historico|floatformat:2 }}
+                    </td>
+                    <td class="text-end fw-bold text-success font-monospace">
+                        S/ {{ d.subtotal|floatformat:2 }}
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'logistics:detalle_despacho_update' d.pk %}" class="btn btn-outline-secondary" title="Editar este ítem (CRUD Update)">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'logistics:detalle_despacho_delete' d.pk %}" class="btn btn-outline-danger" title="Eliminar este ítem (CRUD Delete)">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="bi bi-layers fs-1 d-block mb-2 text-secondary"></i>
+                        No hay registros en el modelo intermedio aún.
+                        <div class="mt-2">
+                            <a href="{% url 'logistics:detalle_despacho_create' %}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                <i class="bi bi-plus me-1"></i> Crear Primer Registro Intermedio
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

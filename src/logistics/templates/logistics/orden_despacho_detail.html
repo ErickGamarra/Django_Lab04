@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}UrbanTrend — Orden de Despacho {{ despacho.codigo }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="{% url 'logistics:index' %}" class="text-decoration-none">Logística</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logistics:orden_despacho_list' %}" class="text-decoration-none">Despachos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ despacho.codigo }}</li>
+    </ol>
+</nav>
+
+<!-- Encabezado de la Orden -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h1 class="h3 fw-bold mb-0 text-slate-800">Orden de Despacho <code>{{ despacho.codigo }}</code></h1>
+            {% if despacho.estado == 'Entregado' %}
+                <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-1">
+                    <i class="bi bi-check-circle-fill me-1"></i>{{ despacho.estado }}
+                </span>
+            {% elif despacho.estado == 'En Tránsito' %}
+                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-1">
+                    <i class="bi bi-arrow-repeat me-1"></i>{{ despacho.estado }}
+                </span>
+            {% elif despacho.estado == 'Cancelado' %}
+                <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-3 py-1">
+                    <i class="bi bi-x-circle-fill me-1"></i>{{ despacho.estado }}
+                </span>
+            {% else %}
+                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-1">
+                    <i class="bi bi-clock me-1"></i>{{ despacho.estado }}
+                </span>
+            {% endif %}
+        </div>
+        <p class="text-muted small mb-0 mt-1">
+            Destino: <strong>{{ despacho.sucursal_destino.nombre }}</strong> ({{ despacho.sucursal_destino.ciudad }}) |
+            Emisión: {{ despacho.fecha_emision|date:"d/m/Y H:i" }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'logistics:detalle_despacho_create_for_despacho' despacho.pk %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Añadir Material
+        </a>
+        <a href="{% url 'logistics:orden_despacho_update' despacho.pk %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 bg-white">
+            <i class="bi bi-pencil me-1"></i> Editar Orden
+        </a>
+        <a href="{% url 'logistics:orden_despacho_list' %}" class="btn btn-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- Datos Generales de Cabecera -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100 bg-white p-3">
+            <span class="text-muted small fw-semibold text-uppercase">Sucursal de Destino</span>
+            <h5 class="fw-bold mb-1 mt-2 text-dark">{{ despacho.sucursal_destino.nombre }}</h5>
+            <small class="text-muted">{{ despacho.sucursal_destino.direccion }}, {{ despacho.sucursal_destino.ciudad }}</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100 bg-white p-3">
+            <span class="text-muted small fw-semibold text-uppercase">Transporte Asignado</span>
+            {% if despacho.transportista %}
+                <h5 class="fw-bold mb-1 mt-2 text-dark">{{ despacho.transportista.empresa }}</h5>
+                <small class="text-muted">Placa: <code>{{ despacho.transportista.placa }}</code> | Tipo: {{ despacho.transportista.tipo_vehiculo }}</small>
+            {% else %}
+                <p class="text-muted fst-italic mt-2 mb-0">Sin transportista asignado</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100 bg-primary text-white p-3">
+            <span class="small fw-semibold text-uppercase opacity-75">Resumen Financiero del Despacho</span>
+            <div class="d-flex justify-content-between align-items-end mt-2">
+                <div>
+                    <h3 class="fw-bold mb-0">S/ {{ despacho.costo_total|floatformat:2 }}</h3>
+                    <small class="opacity-75">{{ despacho.total_unidades }} unidades / metros despachados</small>
+                </div>
+                <i class="bi bi-cash-stack fs-1 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if despacho.observaciones %}
+<div class="alert alert-light border shadow-sm mb-4" role="alert">
+    <strong><i class="bi bi-info-circle me-1"></i> Observaciones de la Guía:</strong> {{ despacho.observaciones }}
+</div>
+{% endif %}
+
+<!-- Tabla del Modelo Intermedio: DetalleDespacho (Criterios 4, 8 y 9) -->
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-layers-fill text-primary fs-5"></i>
+            <div>
+                <h5 class="card-title fw-bold mb-0">Materiales Incluidos (Modelo Intermedio DetalleDespacho)</h5>
+                <small class="text-muted">Atributos propios de la relación transaccional N:M</small>
+            </div>
+        </div>
+        <a href="{% url 'logistics:detalle_despacho_create_for_despacho' despacho.pk %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <i class="bi bi-plus me-1"></i> Añadir Insumo
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="ps-3">Insumo Textil (FK)</th>
+                    <th scope="col">Lote Textil (Atributo Propio)</th>
+                    <th scope="col" class="text-center">Cantidad (Atributo Propio)</th>
+                    <th scope="col" class="text-end">Costo Unit. Histórico (Atributo Propio)</th>
+                    <th scope="col" class="text-end">Subtotal Calculado</th>
+                    <th scope="col">Notas / Observaciones</th>
+                    <th scope="col" class="text-end pe-3" style="width: 140px;">Acciones CRUD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in despacho.detalles.all %}
+                <tr>
+                    <td class="ps-3">
+                        <a href="{% url 'logistics:material_detail' d.material.pk %}" class="fw-bold text-dark text-decoration-none">
+                            <i class="bi bi-box-seam me-1 text-primary"></i>{{ d.material.nombre }}
+                        </a>
+                        <small class="text-muted d-block">{{ d.material.categoria.nombre }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            <code>{{ d.lote_produccion }}</code>
+                        </span>
+                    </td>
+                    <td class="text-center fw-bold">
+                        <span class="badge bg-primary-subtle text-primary fs-6 px-3 py-1 rounded-pill">
+                            {{ d.cantidad_despachada }} {{ d.material.unidad_medida }}
+                        </span>
+                    </td>
+                    <td class="text-end font-monospace">
+                        S/ {{ d.costo_unitario_historico|floatformat:2 }}
+                    </td>
+                    <td class="text-end fw-bold text-success font-monospace">
+                        S/ {{ d.subtotal|floatformat:2 }}
+                    </td>
+                    <td class="small text-muted">
+                        {{ d.observaciones|default:"—" }}
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'logistics:detalle_despacho_update' d.pk %}" class="btn btn-outline-secondary" title="Editar este ítem (CRUD Update)">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'logistics:detalle_despacho_delete' d.pk %}" class="btn btn-outline-danger" title="Eliminar este ítem (CRUD Delete)">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                        Esta orden aún no tiene materiales asignados.
+                        <div class="mt-2">
+                            <a href="{% url 'logistics:detalle_despacho_create_for_despacho' despacho.pk %}" class="btn btn-primary btn-sm rounded-pill px-3">
+                                <i class="bi bi-plus me-1"></i> Añadir el Primer Material
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% if despacho.detalles.all %}
+            <tfoot class="table-light">
+                <tr>
+                    <th colspan="2" class="ps-3 fw-bold text-uppercase">Total Consolidado del Despacho:</th>
+                    <th class="text-center fw-bold">{{ despacho.total_unidades }} bultos/unidades</th>
+                    <th></th>
+                    <th class="text-end fw-bold fs-6 text-success">S/ {{ despacho.costo_total|floatformat:2 }}</th>
+                    <th colspan="2"></th>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

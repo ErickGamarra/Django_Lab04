@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # 1. ENTIDADES INDEPENDIENTES
 
@@ -65,7 +67,7 @@ class CategoriaInsumo(models.Model):
 class Material(models.Model):
     categoria = models.ForeignKey(
         CategoriaInsumo,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='materiales',
         verbose_name="Categoría Asignada"
     )
@@ -81,3 +83,173 @@ class Material(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.categoria.nombre})"
+
+
+# ============================================================
+# 3. RELACIÓN 1:1 — Ficha Técnica Textil (FichaTecnicaMaterial)
+# ============================================================
+class FichaTecnicaMaterial(models.Model):
+    material = models.OneToOneField(
+        Material,
+        on_delete=models.CASCADE,
+        related_name='ficha_tecnica',
+        verbose_name="Material Textil"
+    )
+    composicion = models.CharField(
+        max_length=150,
+        default="100% Algodón Peruano",
+        verbose_name="Composición Textil"
+    )
+    densidad_gramaje = models.CharField(
+        max_length=60,
+        default="220 gr/m²",
+        verbose_name="Densidad / Gramaje"
+    )
+    tolerancia_encogimiento = models.CharField(
+        max_length=40,
+        default="+/- 3%",
+        verbose_name="Tolerancia de Encogimiento"
+    )
+    temperatura_lavado = models.CharField(
+        max_length=60,
+        default="Máximo 30°C",
+        verbose_name="Temperatura de Lavado"
+    )
+    cuidados_adicionales = models.TextField(
+        blank=True,
+        default="No usar lejía. Secar a la sombra en superficie plana.",
+        verbose_name="Cuidados Adicionales"
+    )
+    fecha_emision_certificado = models.DateField(
+        auto_now_add=True,
+        verbose_name="Fecha de Emisión"
+    )
+
+    class Meta:
+        verbose_name = "Ficha Técnica de Material"
+        verbose_name_plural = "Fichas Técnicas de Materiales"
+
+    def __str__(self):
+        return f"Ficha Técnica: {self.material.nombre}"
+
+
+# Señal: Creación automática de Ficha Técnica al crear un Material
+@receiver(post_save, sender=Material)
+def auto_crear_ficha_tecnica(sender, instance, created, **kwargs):
+    if created:
+        FichaTecnicaMaterial.objects.create(material=instance)
+
+
+# ============================================================
+# 4. RELACIÓN N:M CON MODELO INTERMEDIO (OrdenDespacho y DetalleDespacho)
+# ============================================================
+class OrdenDespacho(models.Model):
+    ESTADOS_DESPACHO = [
+        ('Borrador', 'Borrador'),
+        ('En Tránsito', 'En Tránsito'),
+        ('Entregado', 'Entregado'),
+        ('Cancelado', 'Cancelado'),
+    ]
+
+    codigo = models.CharField(
+        max_length=20,
+        unique=True,
+        verbose_name="Código de Despacho"
+    )
+    sucursal_destino = models.ForeignKey(
+        Sucursal,
+        on_delete=models.CASCADE,
+        related_name='despachos',
+        verbose_name="Sucursal de Destino"
+    )
+    transportista = models.ForeignKey(
+        Transportista,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='despachos',
+        verbose_name="Transportista Asignado"
+    )
+    fecha_emision = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de Emisión"
+    )
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS_DESPACHO,
+        default='Borrador',
+        verbose_name="Estado de Despacho"
+    )
+    observaciones = models.TextField(
+        blank=True,
+        verbose_name="Observaciones de Guía"
+    )
+    materiales = models.ManyToManyField(
+        Material,
+        through='DetalleDespacho',
+        related_name='ordenes_despacho',
+        verbose_name="Materiales Despachados"
+    )
+
+    class Meta:
+        verbose_name = "Orden de Despacho"
+        verbose_name_plural = "Órdenes de Despacho"
+        ordering = ['-fecha_emision']
+
+    def __str__(self):
+        return f"{self.codigo} -> {self.sucursal_destino.nombre} ({self.estado})"
+
+    @property
+    def total_unidades(self):
+        return sum(d.cantidad_despachada for d in self.detalles.all())
+
+    @property
+    def costo_total(self):
+        return sum(d.subtotal for d in self.detalles.all())
+
+
+class DetalleDespacho(models.Model):
+    despacho = models.ForeignKey(
+        OrdenDespacho,
+        on_delete=models.CASCADE,
+        related_name='detalles',
+        verbose_name="Orden de Despacho"
+    )
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
+        related_name='detalles_despacho',
+        verbose_name="Material Textil"
+    )
+    # Atributos propios de la relación que no pertenecen a ninguna entidad por separado:
+    cantidad_despachada = models.PositiveIntegerField(
+        verbose_name="Cantidad Despachada"
+    )
+    costo_unitario_historico = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        verbose_name="Costo Unitario Histórico (S/)"
+    )
+    lote_produccion = models.CharField(
+        max_length=30,
+        default="LOTE-001",
+        verbose_name="Número de Lote"
+    )
+    observaciones = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Notas de Recepción"
+    )
+
+    class Meta:
+        verbose_name = "Detalle de Despacho"
+        verbose_name_plural = "Detalles de Despacho"
+        unique_together = ('despacho', 'material')
+
+    @property
+    def subtotal(self):
+        return self.cantidad_despachada * self.costo_unitario_historico
+
+    def __str__(self):
+        return f"{self.despacho.codigo} | {self.material.nombre} ({self.cantidad_despachada} {self.material.unidad_medida})"
+

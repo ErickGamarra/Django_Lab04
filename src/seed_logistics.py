@@ -107,7 +107,55 @@ def seed():
         )
     print(f"Transportistas registrados: {Transportista.objects.count()}")
 
+    # 6. Órdenes de Despacho y Detalles (N:M con modelo intermedio)
+    from logistics.models import OrdenDespacho, DetalleDespacho, FichaTecnicaMaterial
+
+    sucursal_miraflores = Sucursal.objects.filter(nombre__icontains="Miraflores").first()
+    transportista_camion = Transportista.objects.filter(tipo_vehiculo__icontains="Camión").first()
+
+    if sucursal_miraflores and transportista_camion:
+        despacho1, _ = OrdenDespacho.objects.get_or_create(
+            codigo="DSP-2026-001",
+            defaults={
+                'sucursal_destino': sucursal_miraflores,
+                'transportista': transportista_camion,
+                'estado': 'En Tránsito',
+                'observaciones': 'Envío prioritario para reposición de inventario de temporada otoño/invierno.'
+            }
+        )
+
+        mat_pima = Material.objects.filter(nombre__icontains="Pima").first()
+        mat_rib = Material.objects.filter(nombre__icontains="Rib").first()
+
+        if mat_pima:
+            DetalleDespacho.objects.get_or_create(
+                despacho=despacho1,
+                material=mat_pima,
+                defaults={
+                    'cantidad_despachada': 120,
+                    'costo_unitario_historico': Decimal("34.50"),
+                    'lote_produccion': 'LOTE-2026-TX01',
+                    'observaciones': 'Rollos inspeccionados con 100% de conformidad.'
+                }
+            )
+
+        if mat_rib:
+            DetalleDespacho.objects.get_or_create(
+                despacho=despacho1,
+                material=mat_rib,
+                defaults={
+                    'cantidad_despachada': 60,
+                    'costo_unitario_historico': Decimal("22.50"),
+                    'lote_produccion': 'LOTE-2026-TX02',
+                    'observaciones': 'Entrega con precinto de seguridad intacto.'
+                }
+            )
+
+        print(f"Órdenes de Despacho registradas: {OrdenDespacho.objects.count()}")
+        print(f"Detalles de Despacho registrados: {DetalleDespacho.objects.count()}")
+
     print("¡Sembrado de datos finalizado con éxito!")
 
 if __name__ == '__main__':
     seed()
+

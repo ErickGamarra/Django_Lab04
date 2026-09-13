@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}UrbanTrend — Confirmar Eliminación de Categoría{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="{% url 'logistics:index' %}" class="text-decoration-none">Logística</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logistics:categoria_list' %}" class="text-decoration-none">Categorías</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-danger border-2 bg-white">
+            <div class="card-header bg-danger-subtle text-danger py-3">
+                <h5 class="card-title fw-bold mb-0">
+                    <i class="bi bi-shield-lock-fill me-2"></i>Eliminación Protegida (on_delete=PROTECT)
+                </h5>
+            </div>
+            <div class="card-body p-4 text-center">
+                <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
+                <h4 class="fw-bold mt-3 mb-2">¿Desea eliminar la categoría "{{ objeto.nombre }}"?</h4>
+                <p class="text-muted small mb-3">
+                    Esta categoría representa una familia maestra de insumos textiles (Lado 1 de la relación 1:N).
+                </p>
+
+                <div class="alert alert-warning border small text-start mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    <strong>Regla de Integridad Activa:</strong> La relación está configurada con <code>on_delete=models.PROTECT</code>. Si esta categoría tiene materiales registrados en el inventario, la base de datos bloqueará el borrado para proteger los registros de stock y costos históricos.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'logistics:categoria_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-trash-fill me-1"></i> Sí, Intentar Eliminación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

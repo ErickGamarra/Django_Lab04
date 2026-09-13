@@ -39,11 +39,12 @@
                 <tr>
                     <th scope="col" class="ps-3" style="width: 60px;"># ID</th>
                     <th scope="col">Insumo / Denominación</th>
-                    <th scope="col">Categoría (FK)</th>
-                    <th scope="col">Unidad de Medida</th>
-                    <th scope="col">Costo Unitario</th>
-                    <th scope="col">Stock en Almacén</th>
-                    <th scope="col" class="text-end pe-3" style="width: 140px;">Acciones</th>
+                    <th scope="col">Categoría (1:N)</th>
+                    <th scope="col">Ficha Técnica (1:1)</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Costo Unit.</th>
+                    <th scope="col">Stock</th>
+                    <th scope="col" class="text-end pe-3" style="width: 170px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,13 +52,24 @@
                 <tr>
                     <td class="ps-3 text-muted"><code>#{{ m.id }}</code></td>
                     <td class="fw-semibold text-dark">
-                        <i class="bi bi-box-seam me-1 text-secondary"></i>
-                        {{ m.nombre }}
+                        <a href="{% url 'logistics:material_detail' m.pk %}" class="text-decoration-none text-dark">
+                            <i class="bi bi-box-seam me-1 text-primary"></i>
+                            {{ m.nombre }}
+                        </a>
                     </td>
                     <td>
                         <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
                             <i class="bi bi-tag-fill me-1"></i>{{ m.categoria.nombre }}
                         </span>
+                    </td>
+                    <td>
+                        {% if m.ficha_tecnica %}
+                            <a href="{% url 'logistics:material_detail' m.pk %}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none" title="{{ m.ficha_tecnica.composicion }} | {{ m.ficha_tecnica.densidad_gramaje }}">
+                                <i class="bi bi-file-earmark-medical me-1"></i>{{ m.ficha_tecnica.composicion|truncatechars:20 }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted small fst-italic">Sin ficha</span>
+                        {% endif %}
                     </td>
                     <td><code>{{ m.unidad_medida }}</code></td>
                     <td class="fw-semibold text-slate-700">S/ {{ m.precio_unitario }}</td>
@@ -74,8 +86,11 @@
                     </td>
                     <td class="text-end pe-3">
                         <div class="btn-group btn-group-sm">
-                            <a href="{% url 'logistics:material_update' m.pk %}" class="btn btn-outline-primary" title="Editar Material">
-                                <i class="bi bi-pencil-square me-1"></i> Editar
+                            <a href="{% url 'logistics:material_detail' m.pk %}" class="btn btn-outline-primary" title="Ver Detalle y Ficha">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'logistics:material_update' m.pk %}" class="btn btn-outline-secondary" title="Editar Material">
+                                <i class="bi bi-pencil"></i>
                             </a>
                             <a href="{% url 'logistics:material_delete' m.pk %}" class="btn btn-outline-danger" title="Eliminar Material">
                                 <i class="bi bi-trash"></i>

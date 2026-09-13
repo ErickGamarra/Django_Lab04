@@ -1,5 +1,14 @@
 from django import forms
-from .models import Proveedor, Sucursal, Transportista, CategoriaInsumo, Material
+from .models import (
+    Proveedor,
+    Sucursal,
+    Transportista,
+    CategoriaInsumo,
+    Material,
+    FichaTecnicaMaterial,
+    OrdenDespacho,
+    DetalleDespacho,
+)
 
 
 class ProveedorForm(forms.ModelForm):
@@ -81,3 +90,87 @@ class MaterialForm(forms.ModelForm):
         if precio is not None and precio <= 0:
             raise forms.ValidationError("El precio unitario debe ser mayor a cero.")
         return precio
+
+
+# ============================================================
+# FORMULARIOS PARA RELACIONES AVANZADAS (PARTE 2)
+# ============================================================
+
+class FichaTecnicaMaterialForm(forms.ModelForm):
+    class Meta:
+        model = FichaTecnicaMaterial
+        fields = [
+            'material',
+            'composicion',
+            'densidad_gramaje',
+            'tolerancia_encogimiento',
+            'temperatura_lavado',
+            'cuidados_adicionales'
+        ]
+        widgets = {
+            'material': forms.Select(attrs={'class': 'form-select'}),
+            'composicion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. 100% Algodón Pima'}),
+            'densidad_gramaje': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. 240 gr/m²'}),
+            'tolerancia_encogimiento': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. +/- 2.5%'}),
+            'temperatura_lavado': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Lavar en agua fría (30°C)'}),
+            'cuidados_adicionales': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Recomendaciones textiles...'}),
+        }
+
+
+class OrdenDespachoForm(forms.ModelForm):
+    class Meta:
+        model = OrdenDespacho
+        fields = ['codigo', 'sucursal_destino', 'transportista', 'estado', 'observaciones']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. DSP-2026-001'}),
+            'sucursal_destino': forms.Select(attrs={'class': 'form-select'}),
+            'transportista': forms.Select(attrs={'class': 'form-select'}),
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Notas de envío...'}),
+        }
+
+    def clean_codigo(self):
+        codigo = self.cleaned_data.get('codigo')
+        if codigo:
+            return codigo.strip().upper()
+        return codigo
+
+
+class DetalleDespachoForm(forms.ModelForm):
+    class Meta:
+        model = DetalleDespacho
+        fields = [
+            'despacho',
+            'material',
+            'cantidad_despachada',
+            'costo_unitario_historico',
+            'lote_produccion',
+            'observaciones'
+        ]
+        widgets = {
+            'despacho': forms.Select(attrs={'class': 'form-select'}),
+            'material': forms.Select(attrs={'class': 'form-select'}),
+            'cantidad_despachada': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'costo_unitario_historico': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'lote_produccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. LOTE-2026-TX01'}),
+            'observaciones': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Observaciones de entrega...'}),
+        }
+
+    def clean_cantidad_despachada(self):
+        cantidad = self.cleaned_data.get('cantidad_despachada')
+        if cantidad is not None and cantidad <= 0:
+            raise forms.ValidationError("La cantidad despachada debe ser un número entero mayor a cero.")
+        return cantidad
+
+    def clean_costo_unitario_historico(self):
+        costo = self.cleaned_data.get('costo_unitario_historico')
+        if costo is not None and costo <= 0:
+            raise forms.ValidationError("El costo unitario histórico debe ser mayor a cero.")
+        return costo
+
+    def clean_lote_produccion(self):
+        lote = self.cleaned_data.get('lote_produccion')
+        if lote:
+            return lote.strip().upper()
+        return lote
+

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}UrbanTrend — {{ titulo }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="{% url 'logistics:index' %}" class="text-decoration-none">Logística</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logistics:orden_despacho_list' %}" class="text-decoration-none">Despachos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ titulo }}</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-layers text-primary fs-5"></i>
+                <div>
+                    <h5 class="card-title fw-bold mb-0">{{ titulo }}</h5>
+                    <small class="text-muted">Gestión de atributos propios del Modelo Intermedio (Criterio 4 y 9)</small>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Orden de Despacho (FK Cabecera)</label>
+                            {{ form.despacho }}
+                            {% if form.despacho.errors %}
+                                <div class="text-danger small mt-1">{{ form.despacho.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Material / Insumo Textil (FK)</label>
+                            {{ form.material }}
+                            {% if form.material.errors %}
+                                <div class="text-danger small mt-1">{{ form.material.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Cantidad Despachada (Propio)</label>
+                            {{ form.cantidad_despachada }}
+                            <small class="text-muted">Valor entero positivo (> 0)</small>
+                            {% if form.cantidad_despachada.errors %}
+                                <div class="text-danger small mt-1">{{ form.cantidad_despachada.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Costo Unit. Histórico (Propio)</label>
+                            {{ form.costo_unitario_historico }}
+                            <small class="text-muted">Precio congelado en S/</small>
+                            {% if form.costo_unitario_historico.errors %}
+                                <div class="text-danger small mt-1">{{ form.costo_unitario_historico.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Lote de Producción (Propio)</label>
+                            {{ form.lote_produccion }}
+                            <small class="text-muted">Ej. LOTE-2026-TX01</small>
+                            {% if form.lote_produccion.errors %}
+                                <div class="text-danger small mt-1">{{ form.lote_produccion.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Observaciones / Notas de Entrega</label>
+                        {{ form.observaciones }}
+                        {% if form.observaciones.errors %}
+                            <div class="text-danger small mt-1">{{ form.observaciones.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        {% if despacho_obj %}
+                            <a href="{% url 'logistics:orden_despacho_detail' despacho_obj.pk %}" class="btn btn-outline-secondary rounded-pill px-4">
+                                Cancelar
+                            </a>
+                        {% elif detalle %}
+                            <a href="{% url 'logistics:orden_despacho_detail' detalle.despacho.pk %}" class="btn btn-outline-secondary rounded-pill px-4">
+                                Cancelar
+                            </a>
+                        {% else %}
+                            <a href="{% url 'logistics:detalle_despacho_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                                Cancelar
+                            </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-save me-1"></i> Guardar Registro Intermedio
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
